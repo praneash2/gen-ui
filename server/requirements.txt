@@ -1,1 +1,3 @@
 google-adk
+pydantic
+litellm
