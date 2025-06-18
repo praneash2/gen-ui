@@ -2,7 +2,6 @@ import withDynamicHandlers from "../../hoc/withDynamicHandlers/withDynamicHandle
 
 const Header = ({content, setOpen}) => {
     const handlePersonalise = () => {
-        console.log('clicked')
         setOpen(true)
     }
     const DynamicComponent = withDynamicHandlers(content, {handlePersonalise})

@@ -6,6 +6,7 @@ import Layout from './components/layout/Layout';
 import Modal from './components/modal/Modal';
 
 import { responseParser } from './utils/responseParser';
+import { responseParserUtil } from './utils/responseUtils';
 function App() {
   const storedContent = localStorage.getItem('uicontent');
   const [content, setContent] = useState(() => {
@@ -40,7 +41,6 @@ function App() {
         }
       );
       if (response.status === 200) {
-        console.log(response.data)
         fetchUIContent(requestBody, SESSION_ID);
       }
     } catch (error) {
@@ -71,12 +71,10 @@ function App() {
       }
     })
       .then(response => {
-        const { code } = JSON.parse(response?.data[0]?.content?.parts[0]?.text);
-        console.log('code:', JSON.stringify(code));
-        console.log('code without string:', code);
-        const parsedContent = responseParser(JSON.stringify(code));
-        console.log('parsedContent', parsedContent)
+        const code = response?.data[0]?.content?.parts[0]?.text;
+        const parsedContent = responseParserUtil(code);
         setContent(parsedContent);
+        localStorage.setItem('uicontent', JSON.stringify(parsedContent))
         setOpen(false);
         setLoading(false);
         setTheme('');

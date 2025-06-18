@@ -28,7 +28,6 @@ const withDynamicHandlers = (htmlString, functionMap = {}) => {
   const replace = (node) => {
     if (node.type === 'tag') {
       const reactAttrs = {};
-    //   console.log('node', node.name); // you can also use node.name instead of node.tagName
 
       for (const [attr, val] of Object.entries(node.attribs || {})) {
         const lowerAttr = attr.toLowerCase();
