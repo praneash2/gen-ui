@@ -30,21 +30,78 @@ function App() {
     const requestBody = constructBody();
     console.log(requestBody);
 
+    // const url = `${API_BASE_URL}/apps/${APP_NAME}/users/${userId}/sessions/${sessionId}`;
+    const SESSION_ID = 's_136'
+    const response = await axios.post(
+      `http://localhost:8000/apps/component_agent/users/u_125/sessions/${SESSION_ID}`,
+      {}, // empty JSON body
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    // const response = await axios.post('http://localhost:8000/apps/component_agent/users/u_125/sessions/s_125', {
+    //   state: {
+    //     key1: 'value1',
+    //     key2: 42
+    //   }
+    // }, {
+    //   headers: {
+    //     'Content-Type': 'application/json'
+    //   }
+    // })
 
-    // const response = await axios.post('', {
-    //   requestBody
-    // });
-    // if(response.status !== 200) {
-    //   console.error("Error fetching UI content:", response.statusText);
-    //   return;
-    // } else if(response.status === 200) {
-    //   const parsedContent = responseParser(response?.data);
-    //   setContent(parsedContent);
-    // }
+    if(response.status === 200) {
+      
+      console.log(response.data)
 
 
-    setContent(LAYOUT_2);
-    localStorage.setItem('uicontent', JSON.stringify(LAYOUT_2))
+      axios.post('http://localhost:8000/run', {
+        appName: 'component_agent',
+        userId: 'u_125',
+        sessionId: `${SESSION_ID}`,
+        newMessage: {
+          role: 'user',
+          parts: [
+            {
+              text: JSON.stringify(requestBody)
+            }
+          ]
+        }
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        const code = JSON.parse(response?.data[0]?.content?.parts[0]?.text);
+        console.log('code:', JSON.stringify(code.code));
+        const parsedContent = responseParser(JSON.stringify(code.code));
+        console.log('parsedContent', parsedContent)
+        setContent(parsedContent);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+
+      // const response = await axios.post('', {
+      //   requestBody
+      // });
+      // if(response.status !== 200) {
+      //   console.error("Error fetching UI content:", response.statusText);
+      //   return;
+      // } else if(response.status === 200) {
+      //   
+      // }
+
+    }
+
+
+
+
+    // setContent(LAYOUT_2);
+    // localStorage.setItem('uicontent', JSON.stringify(LAYOUT_2))
 
     // test sample UI with parser function
     // const parseStatic = responseParser(LAYOUT_3)
