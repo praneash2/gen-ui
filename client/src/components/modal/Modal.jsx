@@ -1,4 +1,4 @@
-const Modal = ({ showResetLink, fetchUIContent, setOpen, theme, setTheme, resetToDefaultUI }) => {
+const Modal = ({ showResetLink, connectToServer, setOpen, theme, setTheme, resetToDefaultUI }) => {
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999] backdrop-blur-sm">
             <div className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-lg w-full animate-fade-in transition-all duration-300">
@@ -43,7 +43,7 @@ const Modal = ({ showResetLink, fetchUIContent, setOpen, theme, setTheme, resetT
                     </button>
                     <button
                         className="px-5 py-2 rounded-full bg-pink-600 hover:bg-pink-700 text-white font-medium shadow-sm transition duration-200"
-                        onClick={fetchUIContent}
+                        onClick={connectToServer}
                     >
                         Generate Content
                     </button>
