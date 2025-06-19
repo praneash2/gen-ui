@@ -4,7 +4,6 @@ from google.adk.models.lite_llm import LiteLlm
 
 MODEL_GPT_41 = "azure/gpt-4.1"
 
- 
 class ComponentAgentResponse(BaseModel):
     name: str = Field(..., description="The name of the component.This should be same as the input")
     description: str = Field(..., description="A short description of the component.")
@@ -15,7 +14,7 @@ class ComponentAgentResponseList(BaseModel):
     components: list[ComponentAgentResponse]
 
 root_agent = Agent(
-    name="component_agent",
+    name="ui_component_agent",
     # https://ai.google.dev/gemini-api/docs/models
     model=LiteLlm(model=MODEL_GPT_41),
     description="Component agent",
@@ -34,3 +33,5 @@ root_agent = Agent(
     output_schema=ComponentAgentResponseList,
     output_key="component_agent_response",
 )
+
+root_agent = root_agent 

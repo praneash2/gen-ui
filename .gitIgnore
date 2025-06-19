@@ -14,6 +14,7 @@ poetry.lock
 # Environments
 .env
 .venv
+.genuienv
 env/
 venv/
 ENV/
@@ -22,3 +23,4 @@ venv.bak/
 
 # Others
 .DS_Store
+

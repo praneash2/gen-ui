@@ -1,3 +1,4 @@
 google-adk
 pydantic
 litellm
+absl-py
