@@ -5,7 +5,7 @@ import { BASE_UI_CONTENT_JSON, INSTRUCTIONS } from './constants/BASE_UI_CONTENT'
 import Layout from './components/layout/Layout';
 import Modal from './components/modal/Modal';
 
-import { responseParser } from './utils/responseParser';
+// import { responseParser } from './utils/responseParser';
 import { responseParserUtil } from './utils/responseUtils';
 function App() {
   const storedContent = localStorage.getItem('uicontent');
@@ -16,76 +16,50 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [theme, setTheme] = useState('');
 
-  const connectToServer = async () => {
-    setLoading(true);
-    const constructBody = () => {
-      return {
-        code: {
-          ...content
-        },
-        theme: theme,
-        instructions: INSTRUCTIONS
-      }
-    }
-    const requestBody = constructBody();
-    const SESSION_ID = 's_129'
 
-    try {
-      const response = await axios.post(
-        `http://localhost:8000/apps/component_agent/users/u_125/sessions/${SESSION_ID}`,
-        {},
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
+const fetchUIContent = async () => {
+  console.log('✅ Generating New UI Theme...');
+  setLoading(true);
+  const constructBody = () => ({
+    code: { ...content },
+    theme: theme,
+    instructions: INSTRUCTIONS
+  });
+  const requestBody = constructBody();
+  const accessToken = 'your_access_token_here'; // Replace with your actual access token
+  try {
+    const vertexStreamUrl = process.env.REACT_APP_VERTEX_STREAM_URL;
+    const userId = process.env.REACT_APP_USER_ID;
+    const response = await axios.post(
+       vertexStreamUrl ,
+      {
+        class_method: 'stream_query',
+        input: {
+          user_id: userId,
+          message: `{"role": "user", "parts": [{"text": ${JSON.stringify(JSON.stringify(requestBody))}}]}`
         }
-      );
-      if (response.status === 200) {
-        fetchUIContent(requestBody, SESSION_ID);
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`
+        }
       }
-    } catch (error) {
-      if (error?.response?.data?.detail.includes("Session already exists")) {
-        fetchUIContent(requestBody, SESSION_ID)
-      } else {
-        console.log(error)
-      }
-    }
+    );
+    console.log('✅ Response:', response.data);
+    const code = response?.data?.content?.parts?.[0]?.text;
+    const parsedContent = responseParserUtil(code);
+    setContent(parsedContent);
+    localStorage.setItem('uicontent', JSON.stringify(parsedContent));
+    setOpen(false);
+    setLoading(false);
+    setTheme('');
+  } catch (error) {
+    console.error('❌ Error fetching UI content:', error.response?.data || error.message);
+    setLoading(false);
   }
+};
 
-  
-
-  const fetchUIContent = (requestBody, SESSION_ID) => {
-    axios.post('http://localhost:8000/run', {
-      appName: 'component_agent',
-      userId: 'u_125',
-      sessionId: `${SESSION_ID}`,
-      newMessage: {
-        role: 'user',
-        parts: [
-          {
-            text: JSON.stringify(requestBody)
-          }
-        ]
-      }
-    }, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-      .then(response => {
-        const code = response?.data[0]?.content?.parts[0]?.text;
-        const parsedContent = responseParserUtil(code);
-        setContent(parsedContent);
-        localStorage.setItem('uicontent', JSON.stringify(parsedContent))
-
-        setOpen(false);
-        setLoading(false);
-        setTheme('');        
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-  }
 
   const resetToDefaultUI = () => {
     setContent(BASE_UI_CONTENT_JSON);
@@ -102,7 +76,7 @@ function App() {
   return (
     <div className="App">
       {open && (
-        <Modal setOpen={setOpen} showResetLink={storedContent ? true : false} resetToDefaultUI={resetToDefaultUI} connectToServer={connectToServer} theme={theme} setTheme={setTheme} />
+        <Modal setOpen={setOpen} showResetLink={storedContent ? true : false} resetToDefaultUI={resetToDefaultUI} fetchUIContent ={fetchUIContent} theme={theme} setTheme={setTheme} />
 
       )}
       {loading ? (
