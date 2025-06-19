@@ -15,8 +15,7 @@ MODEL = "gemini-2.0-flash"
 IMG_MODEL = "gemini-2.0-flash-preview-image-generation"
 
 class LogoAgentResponse(BaseModel):
-    filename: str = Field(..., description="The name of the image file generated")
-    base64: str = Field(..., description="Base64 string for the generate logo.")
+    logo_url: str = Field(..., description="The URL of the generated logo image.")
 
 def get_image() -> Image:
     """
@@ -137,6 +136,7 @@ logo_agent = Agent(
     ),
     instruction="""
     You are an agent whose job is to make 'generate_image' toolcall from the key 'theme' in the input prompt and pass the 'theme' to the tool. 
+    Whatever be the structure of the input prompt, you will infer the 'theme' from it and pass it to the toolcall.
     Get the URL from the toolcall response and strictly return only the URL in the response no other texts.
     """,
     tools=[generate_image],

@@ -73,10 +73,18 @@ function App() {
       }
     })
       .then(response => {
-        const code = response?.data[0]?.content?.parts[0]?.text;
+        const combined_result = response?.data?.filter(item => item.author === 'combine_results_agent');
+        const code = (combined_result.length-1 >= 0) && combined_result[combined_result.length-1].content?.parts[0]?.text;
         const parsedContent = responseParserUtil(code);
+
+        // for logo
+        if (parsedContent?.header) {
+          parsedContent.header = parsedContent?.header?.replace('./logo.png', (parsedContent?.logo_url || './logo.png'));
+        }
+
         setContent(parsedContent);
-        localStorage.setItem('uicontent', JSON.stringify(parsedContent))
+        localStorage.setItem('uicontent', JSON.stringify(parsedContent));
+
 
         setOpen(false);
         setLoading(false);
