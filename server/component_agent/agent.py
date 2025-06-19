@@ -33,4 +33,6 @@ root_agent = Agent(
     """,
     output_schema=ComponentAgentResponseList,
     output_key="component_agent_response",
+    disallow_transfer_to_parent=True, 
+    disallow_transfer_to_peers=True
 )
