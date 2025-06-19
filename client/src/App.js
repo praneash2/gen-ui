@@ -32,7 +32,7 @@ function App() {
 
     try {
       const response = await axios.post(
-        `http://localhost:8000/apps/component_agent/users/u_125/sessions/${SESSION_ID}`,
+        `http://localhost:8000/apps/orchestrator_agent/users/u_125/sessions/${SESSION_ID}`,
         {},
         {
           headers: {
@@ -56,7 +56,7 @@ function App() {
 
   const fetchUIContent = (requestBody, SESSION_ID) => {
     axios.post('http://localhost:8000/run', {
-      appName: 'component_agent',
+      appName: 'orchestrator_agent',
       userId: 'u_125',
       sessionId: `${SESSION_ID}`,
       newMessage: {
