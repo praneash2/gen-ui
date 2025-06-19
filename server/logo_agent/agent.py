@@ -3,14 +3,20 @@ from google.genai import types
 from PIL import Image
 import PIL.Image
 from io import BytesIO
+import base64
 import os
 from dotenv import load_dotenv
+from pydantic import BaseModel, Field
 from google.adk.agents import Agent
 
 load_dotenv()
 
 MODEL = "gemini-2.0-flash"
 IMG_MODEL = "gemini-2.0-flash-preview-image-generation"
+
+class LogoAgentResponse(BaseModel):
+    filename: str = Field(..., description="The name of the image file generated")
+    base64: str = Field(..., description="Base64 string for the generate logo.")
 
 def get_image() -> Image:
     """
@@ -43,27 +49,51 @@ def generate_image(prompt: str) -> Image:
             response_modalities=['TEXT', 'IMAGE']
         )
     )
+
+
     
     for part in response.candidates[0].content.parts:
         if part.inline_data is not None:
             image = Image.open(BytesIO(part.inline_data.data))
             image.save('generated-image.png')
+
             return {
                 "status": "success",
                 "detail": "Image generated successfully and stored in artifacts.",
                 "filename": "generated-image.png",
             }
+        
+            
     
     return {"status": "failed"}
 
+def image_file_to_base64(format: str = "PNG") -> str:
+    """
+    Reads an image from a file path and returns its Base64-encoded string.
+
+    Args:
+        filepath (str): Path to the image file.
+        format (str): Format to encode the image in (e.g., "PNG", "JPEG").
+
+    Returns:
+        str: Base64-encoded string of the image.
+    """
+    with Image.open("generated-image.png") as image:
+        buffered = BytesIO()
+        image.save(buffered, format=format)
+        return base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+
+
+
 root_agent = Agent(
     model=MODEL,
-    name="multimodal_agent",
+    name="logo_agent",
     description=(
         "An agent that generates images based on user prompts"
     ),
     instruction="""
-    You are an agent whose job is to make 'generate_image' toolcall and pass the prompt to the tool.
+    You are an agent whose job is to make 'generate_image' toolcall and pass the prompt to the tool. Then make 'image_file_to_base64' tool call to get the base64. Note: Just return the base64 from the last tool call alone
     """,
-    tools=[generate_image],
+    tools=[generate_image, image_file_to_base64],
 )

@@ -52,6 +52,8 @@ function App() {
     }
   }
 
+  
+
   const fetchUIContent = (requestBody, SESSION_ID) => {
     axios.post('http://localhost:8000/run', {
       appName: 'component_agent',
@@ -75,9 +77,10 @@ function App() {
         const parsedContent = responseParserUtil(code);
         setContent(parsedContent);
         localStorage.setItem('uicontent', JSON.stringify(parsedContent))
+
         setOpen(false);
         setLoading(false);
-        setTheme('');
+        setTheme('');        
       })
       .catch(error => {
         console.error('Error:', error);

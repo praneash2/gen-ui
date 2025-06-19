@@ -115,7 +115,9 @@ export const BASE_UI_CONTENT = /* HTML */ `
 
 export const HEADER_UI_CONTENT = `<header class="bg-white sticky top-0 z-50 shadow-sm">
         <div class="container mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-            <div class="text-3xl font-light text-gray-800" style="font-family: 'Georgia', serif;">Britney</div>
+            <div class="text-3xl font-light text-gray-800 flex gap-5 items-center" style="font-family: 'Georgia', serif; height: 80px; width: 80px">
+                <img class="w-100 rounded-full" id="logo" src="./logo.png" alt="logo"/> <span>Britney</span>
+            </div>
 
             <nav class="hidden lg:flex items-center space-x-6">
                 <a href="#" class="text-gray-600 hover:text-pink-500 text-sm font-medium">Home</a>
