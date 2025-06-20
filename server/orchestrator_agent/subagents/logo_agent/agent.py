@@ -13,7 +13,6 @@ load_dotenv()
 MODEL = "gemini-2.0-flash"
 IMG_MODEL = "gemini-2.0-flash-preview-image-generation"
 
-
 class LogoAgentResponse(BaseModel):
     status: str = Field(..., description="Status of the image generation process.")
     detail: str = Field(..., description="Detailed message about the generation process.")
