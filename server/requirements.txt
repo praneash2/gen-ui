@@ -1,4 +1,6 @@
 google-adk
 pydantic
 litellm
-absl-py
+genai
+python-dotenv
+Pillow

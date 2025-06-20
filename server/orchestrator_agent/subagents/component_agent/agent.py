@@ -13,7 +13,7 @@ class ComponentAgentResponse(BaseModel):
 class ComponentAgentResponseList(BaseModel):
     components: list[ComponentAgentResponse]
 
-root_agent = Agent(
+component_agent = Agent(
     name="component_agent",
     # https://ai.google.dev/gemini-api/docs/models
     model=LiteLlm(model=MODEL_GPT_41),
@@ -32,6 +32,6 @@ root_agent = Agent(
     """,
     output_schema=ComponentAgentResponseList,
     output_key="component_agent_response",
+    disallow_transfer_to_parent=True, 
+    disallow_transfer_to_peers=True
 )
-
-root_agent = root_agent 
