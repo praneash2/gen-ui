@@ -100,6 +100,7 @@ def create_session(resource_id: str, user_id: str) -> None:
         print("✅ Created session:")
         print(remote_session)
         print("\nUse this session ID with --session_id when sending messages.")
+        return remote_session
     except Exception as e:
         print(f"❌ Error in create_session(): {e}")
 
@@ -127,8 +128,13 @@ def get_session(resource_id: str, user_id: str, session_id: str) -> None:
     except Exception as e:
         print(f"❌ Error in get_session(): {e}")
 
-def send_message_stream(resource_id: str, user_id: str, session_id: str, message: str) -> None:
+def send_message_stream(resource_id: str,user_id: str, message: str) -> None:
     """Sends a message to the deployed agent using streaming."""
+
+    session_response = create_session(resource_id, user_id)
+    session_id = session_response["id"]
+    print("Session ID:", session_id)
+
     try:
         remote_app = agent_engines.get(resource_id)
         print(f"📨 Sending message to session {session_id}:")
@@ -142,6 +148,14 @@ def send_message_stream(resource_id: str, user_id: str, session_id: str, message
             print(event)
     except Exception as e:
         print(f"❌ Error in send_message_stream(): {e}")
+    finally:
+        try:
+            remote_app = agent_engines.get(resource_id)
+            remote_app.delete_session(user_id=user_id, session_id=session_id)
+            print(f"✅ Deleted session {session_id} for user {user_id}.")
+        except Exception as e:
+            print(f"❌ Error deleting session {session_id}: {e}")
+        
 
 
 def main(argv=None):
@@ -209,10 +223,10 @@ def main(argv=None):
         if not FLAGS.resource_id:
             print("resource_id is required for send")
             return
-        if not FLAGS.session_id:
-            print("session_id is required for send")
+        if not FLAGS.user_id:
+            print("user_id is required for send")
             return
-        send_message_stream(FLAGS.resource_id, user_id, FLAGS.session_id, FLAGS.message)
+        send_message_stream(FLAGS.resource_id, FLAGS.user_id, FLAGS.message)
     else:
         print(
             "Please specify one of: --create, --delete, --list, --create_session, --list_sessions, --get_session, or  --send_stream"

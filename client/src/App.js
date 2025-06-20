@@ -5,7 +5,7 @@ import { BASE_UI_CONTENT_JSON, INSTRUCTIONS } from './constants/BASE_UI_CONTENT'
 import Layout from './components/layout/Layout';
 import Modal from './components/modal/Modal';
 
-import { responseParser } from './utils/responseParser';
+// import { responseParser } from './utils/responseParser';
 import { responseParserUtil } from './utils/responseUtils';
 function App() {
   const storedContent = localStorage.getItem('uicontent');
@@ -16,184 +16,49 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [theme, setTheme] = useState('');
 
-  const connectToServer = async () => {
-    setLoading(true);
-    const constructBody = () => {
-      return {
-        code: {
-          ...content
-        },
-        theme: theme,
-        instructions: INSTRUCTIONS
-      }
-    }
-    const requestBody = constructBody();
-    const SESSION_ID = 's_129'
 
-    try {
-      const response = await axios.post(
-        `http://localhost:8000/apps/component_agent/users/u_125/sessions/${SESSION_ID}`,
-        {},
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
+const fetchUIContent = async () => {
+  console.log('✅ Generating New UI Theme...');
+  setLoading(true);
+  const constructBody = () => ({
+    code: { ...content },
+    theme: theme,
+    instructions: INSTRUCTIONS
+  });
+  const requestBody = constructBody();
+  const accessToken = 'use here';
+  try {
+    const vertexStreamUrl = process.env.REACT_APP_VERTEX_STREAM_URL;
+    const userId = process.env.REACT_APP_USER_ID;
+    const response = await axios.post(
+       vertexStreamUrl ,
+      {
+        class_method: 'stream_query',
+        input: {
+          user_id: userId,
+          message: `{"role": "user", "parts": [{"text": ${JSON.stringify(JSON.stringify(requestBody))}}]}`
         }
-      );
-      if (response.status === 200) {
-        fetchUIContent(requestBody, SESSION_ID);
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`
+        }
       }
-    } catch (error) {
-      if (error?.response?.data?.detail.includes("Session already exists")) {
-        fetchUIContent(requestBody, SESSION_ID)
-      } else {
-        console.log(error)
-      }
-    }
+    );
+    console.log('✅ Response:', response.data);
+    const code = response?.data?.content?.parts?.[0]?.text;
+    const parsedContent = responseParserUtil(code);
+    setContent(parsedContent);
+    localStorage.setItem('uicontent', JSON.stringify(parsedContent));
+    setOpen(false);
+    setLoading(false);
+    setTheme('');
+  } catch (error) {
+    console.error('❌ Error fetching UI content:', error.response?.data || error.message);
+    setLoading(false);
   }
-
-  const fetchUIContent = (requestBody, SESSION_ID) => {
-    axios.post('http://localhost:8000/run', {
-      appName: 'component_agent',
-      userId: 'u_125',
-      sessionId: `${SESSION_ID}`,
-      newMessage: {
-        role: 'user',
-        parts: [
-          {
-            text: JSON.stringify(requestBody)
-          }
-        ]
-      }
-    }, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-      .then(response => {
-        const code = response?.data[0]?.content?.parts[0]?.text;
-        const parsedContent = responseParserUtil(code);
-        setContent(parsedContent);
-        localStorage.setItem('uicontent', JSON.stringify(parsedContent))
-        setOpen(false);
-        setLoading(false);
-        setTheme('');
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-  }
-
-//   axios.post(
-//     'https://us-central1-aiplatform.googleapis.com/v1/projects/genuiagent/locations/us-central1/reasoningEngines/5897859536227663872:query',
-//     {
-//       userId: 'u_125',
-//       sessionId: SESSION_ID,
-//       newMessage: {
-//         role: 'user',
-//         parts: [
-//           {
-//             text: JSON.stringify(requestBody),
-//           },
-//         ],
-//       },
-//     },
-//     {
-//       headers: {
-//         'Content-Type': 'application/json',
-//         Authorization: `Bearer ${'ya29.a0AS3H6NwM6HxmGauOvfAcEkgD3BI3v8Cm0Idpxfk3ebUJ-emNUDx2Qswgy3SIS6jvSqyDs11KnAqHAo1WClElPS9gG_jNeXDsWut91h8IxH6UcINiuy2wgwVktHxEfnQGm8XjF5X8WHZz66UMYO3DBB1wJpT17sR7rOjgOOZdVig4TbkaCgYKAcASARASFQHGX2MiD-Q7MQWdtdIYUpWNOynkKw0182'}`, // 🔐 Required!
-//       },
-//     }
-//   )
-//     .then((response) => {
-//       const code = response?.data?.candidates?.[0]?.content?.parts?.[0]?.text;
-//       const parsedContent = responseParserUtil(code);
-//       setContent(parsedContent);
-//       localStorage.setItem('uicontent', JSON.stringify(parsedContent));
-//       setOpen(false);
-//       setLoading(false);
-//       setTheme('');
-//     })
-//     .catch((error) => {
-//       console.error('Error:', error);
-//     });
-// };
-
-// const connectToServer = async () => {
-//   setLoading(true);
-
-//   const constructBody = () => ({
-//     code: { ...content },
-//     theme: theme,
-//     instructions: INSTRUCTIONS
-//   });
-
-//   const requestBody = constructBody();
-//   const userId = 'u_125';
-//   const accessToken = 'ya29.a0AW4Xtxh4yRYLffHpi2-sBM_kfERljxYLsE6xpo55s9FPST6MRZ3K5SMX49M7_XRF1TxyrobvDq-LeglRtwKspBOp-7Ox-UVb_Li1h3mZCSZ-zXV-2JdbPRCbAFqwgpE8JwxVCzrLHO3twqcyqpDKpsdwqkgkI2gAmVSXKC9mmjBgpRIaCgYKAf4SARASFQHGX2Mi0WpNs6DWpdVmS3zV-w_nMA0182';
-
-//   try {
-//     // Step 1: Create a session
-//     const createResponse = await axios.post(
-//       'https://us-central1-aiplatform.googleapis.com/v1/projects/genuiagent/locations/us-central1/reasoningEngines/5897859536227663872:query',
-//       {
-//         class_method: 'create_session',
-//         input: {
-//           user_id: userId
-//         }
-//       },
-//       {
-//         headers: {
-//           'Content-Type': 'application/json',
-//           Authorization: `Bearer ${accessToken}`
-//         }
-//       }
-//     );
-
-//     const SESSION_ID = createResponse?.data?.output?.session_id;
-//     console.log('✅ Session created:', SESSION_ID);
-
-//     if (SESSION_ID) {
-//       fetchUIContent(requestBody, SESSION_ID, accessToken);
-//     }
-//   } catch (error) {
-//     console.error('❌ Error during session creation:', error.response?.data || error.message);
-//     setLoading(false);
-//   }
-// };
-
-// const fetchUIContent = async (requestBody, SESSION_ID, accessToken) => {
-//   try {
-//     const response = await axios.post(
-//       'https://us-central1-aiplatform.googleapis.com/v1/projects/genuiagent/locations/us-central1/reasoningEngines/5897859536227663872:query',
-//       {
-//         class_method: 'stream_query',
-//         input: {
-//           user_id: 'u_125',
-//           session_id: SESSION_ID,
-//           message: `{"role": "user", "parts": [{"text": ${JSON.stringify(JSON.stringify(requestBody))}}]}`
-//         }
-//       },
-//       {
-//         headers: {
-//           'Content-Type': 'application/json',
-//           Authorization: `Bearer ${accessToken}`
-//         }
-//       }
-//     );
-
-//     const code = response?.data?.candidates?.[0]?.content?.parts?.[0]?.text;
-//     const parsedContent = responseParserUtil(code);
-//     setContent(parsedContent);
-//     localStorage.setItem('uicontent', JSON.stringify(parsedContent));
-//     setOpen(false);
-//     setLoading(false);
-//     setTheme('');
-//   } catch (error) {
-//     console.error('❌ Error fetching UI content:', error.response?.data || error.message);
-//     setLoading(false);
-//   }
-// };
+};
 
 
   const resetToDefaultUI = () => {
@@ -211,7 +76,7 @@ function App() {
   return (
     <div className="App">
       {open && (
-        <Modal setOpen={setOpen} showResetLink={storedContent ? true : false} resetToDefaultUI={resetToDefaultUI} connectToServer={connectToServer} theme={theme} setTheme={setTheme} />
+        <Modal setOpen={setOpen} showResetLink={storedContent ? true : false} resetToDefaultUI={resetToDefaultUI} fetchUIContent ={fetchUIContent} theme={theme} setTheme={setTheme} />
 
       )}
       {loading ? (

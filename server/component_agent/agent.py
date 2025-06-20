@@ -14,7 +14,7 @@ class ComponentAgentResponseList(BaseModel):
     components: list[ComponentAgentResponse]
 
 root_agent = Agent(
-    name="ui_component_agent",
+    name="component_agent",
     # https://ai.google.dev/gemini-api/docs/models
     model=LiteLlm(model=MODEL_GPT_41),
     description="Component agent",
