@@ -6,7 +6,7 @@ from absl import app, flags
 from dotenv import load_dotenv
 from vertexai import agent_engines
 from vertexai.preview.reasoning_engines import AdkApp
-from server.component_agent.agent import root_agent
+from server.orchestrator_agent.agent import root_agent
 import json
 FLAGS = flags.FLAGS
 flags.DEFINE_string("project_id", None, "GCP project ID.")
@@ -58,12 +58,19 @@ def create() -> None:
                 "absl-py==2.3.0",
                 "litellm==1.72.6",
                 "cloudpickle==3.1.1",
+                "cloudinary==1.44.1",
+                "pillow==11.2.1",
+                "python-dotenv==1.1.0"
             ],
             extra_packages=["./server"],
             env_vars={
                 "AZURE_API_KEY": os.getenv("AZURE_API_KEY"),
                 "AZURE_API_BASE": os.getenv("AZURE_API_BASE"),
                 "AZURE_API_VERSION": os.getenv("AZURE_API_VERSION", "2025-01-01-preview"),
+                "GOOGLE_API_KEY": os.getenv("GOOGLE_API_KEY"),
+                "CLOUDINARY_CLOUD_NAME": os.getenv("CLOUDINARY_CLOUD_NAME"),
+                "CLOUDINARY_API_KEY": os.getenv("CLOUDINARY_API_KEY"),
+                "CLOUDINARY_API_SECRET": os.getenv("CLOUDINARY_API_SECRET"),
             }
         )
         print(f"✅ Created remote agent: {remote_agent.resource_name}")
