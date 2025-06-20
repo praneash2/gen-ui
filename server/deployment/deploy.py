@@ -71,6 +71,7 @@ def create() -> None:
                 "CLOUDINARY_CLOUD_NAME": os.getenv("CLOUDINARY_CLOUD_NAME"),
                 "CLOUDINARY_API_KEY": os.getenv("CLOUDINARY_API_KEY"),
                 "CLOUDINARY_API_SECRET": os.getenv("CLOUDINARY_API_SECRET"),
+                "GOOGLE_GENAI_USE_VERTEXAI": os.getenv("GOOGLE_GENAI_USE_VERTEXAI"),
             }
         )
         print(f"✅ Created remote agent: {remote_agent.resource_name}")

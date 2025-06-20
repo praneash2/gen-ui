@@ -14,7 +14,6 @@ poetry.lock
 # Environments
 .env
 .venv
-.genuienv
 env/
 venv/
 ENV/

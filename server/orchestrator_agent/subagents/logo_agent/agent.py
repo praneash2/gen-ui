@@ -27,7 +27,7 @@ def get_image() -> Image.Image:
     Returns:
         Image: The image loaded from the local file system.
     """
-    return Image.open('image.png')
+    return Image.open('server/image.png')
 
 
 async def generate_image(prompt: str) -> LogoAgentResponse:
@@ -41,7 +41,7 @@ async def generate_image(prompt: str) -> LogoAgentResponse:
         Image: The generated image.
     """
 
-    client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
+    client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"],vertexai=False)
     image = get_image()
 
     response = client.models.generate_content(
@@ -109,7 +109,7 @@ def upload_image_to_cloudinary() -> str:
         api_secret=os.getenv('CLOUDINARY_API_SECRET'),
     )
 
-    image_path = "generated-image.png"
+    image_path = "server/generated-image.png"
     public_id = "resolutes_genUI_img"
 
     try:
