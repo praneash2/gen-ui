@@ -10,8 +10,10 @@ export const responseParserUtil=(rawString)=>{
                 sectionKeys.forEach((sectionKey) => {
                     if (sectionKey.toLowerCase() === key.name.toLowerCase()) {
                         result[key.name.toLowerCase()] = key.code;
+                        result[key.name.toLowerCase()] = result[key.name.toLowerCase()].replace(/class(Name)?/gi, 'class');
                     }
                 });
+                
             });
         }
         // Extract logo_url if present
