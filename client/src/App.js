@@ -20,7 +20,7 @@ const fetchUIContent = async () => {
   setLoading(true);
 
   const requestBody = {
-    code: { ...content },
+    code: { ...BASE_UI_CONTENT_JSON },
     theme: theme,
     instructions: INSTRUCTIONS,
   };
