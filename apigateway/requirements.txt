@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+google-auth 
+google-auth-oauthlib
+google-generativeai
+google-api-core
+google-adk
+google-api-python-client
+cloudinary==1.44.1
+pillow==11.2.1

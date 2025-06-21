@@ -1,0 +1,2 @@
+REACT_APP_VERTEX_STREAM_URL=https://LOCATION-aiplatform.googleapis.com/v1/projects/PROJECT_ID/locations/LOCATION/reasoningEngines/RESOURCE_ID:streamQuery?alt=sse -d
+REACT_APP_USER_ID="USER_ID"

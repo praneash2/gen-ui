@@ -22,3 +22,5 @@ venv.bak/
 
 # Others
 .DS_Store
+
+apigateway/keys/service_account.json

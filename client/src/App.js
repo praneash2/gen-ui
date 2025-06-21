@@ -1,31 +1,96 @@
 import './App.css';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { marked } from 'marked';
-import { BASE_UI_CONTENT } from './constants/BASE_UI_CONTENT';
+import { BASE_UI_CONTENT_JSON, INSTRUCTIONS } from './constants/BASE_UI_CONTENT';
 import Layout from './components/layout/Layout';
 import Modal from './components/modal/Modal';
+import { responseParserUtil } from './utils/responseUtils';
+
 function App() {
-  const [content, setContent] = useState(BASE_UI_CONTENT);
+  const storedContent = localStorage.getItem('uicontent');
+  const [content, setContent] = useState(() =>
+    storedContent ? JSON.parse(storedContent) : BASE_UI_CONTENT_JSON
+  );
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [theme, setTheme] = useState('');
 
-  const fetchUIContent = async () => {
-    // const response = await axios.get('');
-    // setContent(response.data);
+const fetchUIContent = async () => {
+  console.log('✅ Generating New UI Theme...');
+  setLoading(true);
+
+  const requestBody = {
+    code: { ...content },
+    theme: theme,
+    instructions: INSTRUCTIONS,
+  };
+
+  try {
+    // ✅ Send double-stringified payload to FastAPI
+    const response = await axios.post(
+      `${process.env.REACT_APP_FAST_API_URL}/api/generate-ui`,
+      {
+        content: JSON.stringify(JSON.stringify(requestBody))
+      }
+    );
+    
+    console.log("API response:", response.data);
+    // ✅ Split and parse each line from FastAPI NDJSON response
+    const jsonLines = response.data.trim().split('\n');
+    const parsedItems = jsonLines.map(line => JSON.parse(line));
+
+    // ✅ Filter response for combine_results_agent
+    const combinedResult = parsedItems.find(
+      item => item.author === 'combine_results_agent'
+    );
+
+    const code = combinedResult?.content?.parts?.[0]?.text;
+    const parsedContent = responseParserUtil(code);
+
+    // ✅ Logo fix
+    if (parsedContent?.header) {
+      parsedContent.header = parsedContent.header.replace(
+        './logo.png',
+        parsedContent.logo_url || './logo.png'
+      );
+    }
+
+    setContent(parsedContent);
+    localStorage.setItem('uicontent', JSON.stringify(parsedContent));
     setOpen(false);
-    setLoading(true);
-    const timer = setTimeout(() => setLoading(false), 10000);
+
+  } catch (error) {
+    console.error('❌ Error fetching UI content:', error.response?.data || error.message);
   }
+
+  setLoading(false);
+  setTheme('');
+};
+
+  const resetToDefaultUI = () => {
+    setContent(BASE_UI_CONTENT_JSON);
+    localStorage.removeItem('uicontent');
+    setOpen(false);
+  };
+
   useEffect(() => {
-    const timer = setTimeout(() => setOpen(true), 10000);
+    const timer = setTimeout(() => {
+      if (!storedContent) setOpen(true);
+    }, 5000);
     return () => clearTimeout(timer);
-  }, [])
+  }, []);
+
   return (
     <div className="App">
       {open && (
-        <Modal setOpen={setOpen} fetchUIContent={fetchUIContent} />
-
+        <Modal
+          setOpen={setOpen}
+          showResetLink={!!storedContent}
+          resetToDefaultUI={resetToDefaultUI}
+          fetchUIContent={fetchUIContent}
+          theme={theme}
+          setTheme={setTheme}
+        />
       )}
       {loading ? (
         <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-gradient-to-br from-white via-pink-50 to-pink-100 text-center">
@@ -41,9 +106,9 @@ function App() {
           <p className="text-sm font-bold text-gray-500">Crafting your custom layout 🧩</p>
           <p className="text-md text-gray-500 mt-2">Sit back while we set everything up ✨</p>
         </div>
-
-      ) : (<Layout content={content} />)}
-
+      ) : (
+        <Layout content={content} setOpen={setOpen} />
+      )}
     </div>
   );
 }

@@ -28,7 +28,6 @@
 python3 -m venv .venv
 source .venv/bin/activate
 ```
-
 --- 
 
 ## ⚙️ Backend Setup
@@ -46,6 +45,13 @@ adk run <folder_name>
 ```bash
 cd server
 adk api_server
+adk api_server --allow_origins http://localhost:3000
+```
+
+### Run Dev UI (ADK web)
+```bash
+cd server
+adk web
 ```
 
 ### Testing Reference
@@ -73,3 +79,46 @@ GENUI/
 ├── .env.example  # Environment variables template
 └── README.md     # Project overview and setup
 ```
+
+## Api Gateway
+
+#### This is for token access and image generation
+
+```bash
+Create and Activate the Python Environment
+
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+```
+Create .env and Set the Required Environment Variables
+
+GOOGLE_API_KEY=" "
+CLOUDINARY_CLOUD_NAME=' '
+CLOUDINARY_API_KEY=' '
+CLOUDINARY_API_SECRET=' '
+IMG_MODEL = " "
+
+```
+
+## Deploy to Cloud Run Follow this steps
+
+### STEP 1 : Containerize the Application and push to Gcloud Artifact Registry
+```
+docker buildx build -t apigatewaygenui --platform linux/amd64 .
+```
+```
+docker tag apigatewaygenui:latest  us-central1-docker.pkg.dev/genuiagent/apigatewaygenui/apigatewaygenui:latest
+```
+```
+docker push us-central1-docker.pkg.dev/genuiagent/apigatewaygenui/apigatewaygenui:latest
+```
+### STEP 2 :
+
+#### Create a Cloud Run from gcloud console using artifact registry 
+
+or 
+
+#### Create a Cloud Run using commands
+
