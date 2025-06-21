@@ -1,8 +1,14 @@
 from google.adk.agents import Agent
 from pydantic import BaseModel, Field
 from google.adk.models.lite_llm import LiteLlm
+import os
+from dotenv import load_dotenv
 
-MODEL_GPT_41 = "azure/gpt-4.1"
+# Load environment variables
+load_dotenv()
+
+# Define the model to be used
+MODEL_GPT_41 = os.getenv("MODEL_GPT_41", "azure/gpt-4.1")
 
 class ComponentAgentResponse(BaseModel):
     name: str = Field(..., description="The name of the component.This should be same as the input")

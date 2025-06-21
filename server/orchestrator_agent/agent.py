@@ -4,6 +4,13 @@ from google.adk.agents import ParallelAgent, SequentialAgent
 from .subagents.component_agent import component_agent
 from .subagents.logo_agent import logo_agent
 from pydantic import BaseModel, Field
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+MODEL = os.getenv("MODEL", "gemini-2.0-flash")
 
 class FinalResultAgentResponse(BaseModel):
     name: str = Field(..., description="The name of the component.This should be same as the input")
@@ -24,7 +31,7 @@ layout_agent=ParallelAgent(
 combine_results_agent=Agent(
     name="combine_results_agent",
     # https://ai.google.dev/gemini-api/docs/models
-    model="gemini-2.0-flash",
+    model=MODEL,
     description="Combine results agent",
     instruction="""
     You are a helpful assistant that combines the results of the sub-agents.

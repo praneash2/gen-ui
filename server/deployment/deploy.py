@@ -13,7 +13,7 @@ flags.DEFINE_string("project_id", None, "GCP project ID.")
 flags.DEFINE_string("location", None, "GCP location.")
 flags.DEFINE_string("bucket", None, "GCP bucket.")
 flags.DEFINE_string("resource_id", None, "ReasoningEngine resource ID.")
-flags.DEFINE_string("user_id", "test_user", "User ID for session operations.")
+flags.DEFINE_string("user_id", None, "User ID for session operations.")
 flags.DEFINE_string("session_id", None, "Session ID for operations.")
 flags.DEFINE_bool("create", False, "Creates a new deployment.")
 flags.DEFINE_bool("delete", False, "Deletes an existing deployment.")
@@ -116,12 +116,14 @@ def list_sessions(resource_id: str, user_id: str) -> None:
     """Lists all sessions for the specified user."""
     try:
         remote_app = agent_engines.get(resource_id)
-        sessions = remote_app.list_sessions(user_id=user_id)
+        response = remote_app.list_sessions(user_id=user_id)
+
         print(f"📘 Sessions for user '{user_id}':")
-        for session in sessions:
+        for session in response.get("sessions", []):
             print(f"- Session ID: {session['id']}")
     except Exception as e:
         print(f"❌ Error in list_sessions(): {e}")
+
 
 def get_session(resource_id: str, user_id: str, session_id: str) -> None:
     """Gets a specific session."""
