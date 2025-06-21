@@ -1,16 +1,18 @@
 import os
 from google.oauth2 import service_account
 import google.auth.transport.requests
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, Form ,HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from google import genai
 from google.genai.types import GenerateContentConfig
 from dotenv import load_dotenv
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse,PlainTextResponse
 from io import BytesIO
 from pydantic import BaseModel, Field
 from PIL import Image
 import PIL.Image
+import httpx
+
 
 load_dotenv()
 app = FastAPI()
@@ -26,9 +28,12 @@ app.add_middleware(
 )
 
 # Load credentials from JSON key file
-SERVICE_ACCOUNT_FILE = "service_account.json"
+SERVICE_ACCOUNT_FILE = "keys/service_account.json"
 SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
 IMG_MODEL = os.getenv("IMG_MODEL", "gemini-2.0-flash-preview-image-generation")
+
+class UIContentRequest(BaseModel):
+    content: str = Field(..., description="The content for which the UI is to be generated.")
 
 class LogoAgentResponse(BaseModel):
     status: str = Field(..., description="Status of the image generation process.")
@@ -78,8 +83,73 @@ def upload_image_to_cloudinary() -> str:
         response = cloudinary.uploader.upload(image_path, public_id=public_id)
         print("Image uploaded. URL:", response['secure_url'])
         return response['secure_url']
+
+def fetch_gcp_access_token():
+    try:
+        credentials = service_account.Credentials.from_service_account_file(
+            SERVICE_ACCOUNT_FILE,
+            scopes=SCOPES
+        )
+        auth_req = google.auth.transport.requests.Request()
+        credentials.refresh(auth_req)
+        return credentials.token
+    except Exception as e:
+        raise RuntimeError(f"Failed to fetch GCP token: {e}")  
     
+
+# List and delete sessions
+async def list_and_delete_sessions(access_token: str, user_id: str):
+    vertex_query_url = os.getenv("VERTEX_QUERY_URL")
+    try:
+        async with httpx.AsyncClient() as client:
+            # List sessions
+            list_res = await client.post(vertex_query_url, json={
+                "class_method": "list_sessions",
+                "input": {"user_id": user_id}
+            }, headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {access_token}"
+            })
+            list_data = list_res.json()
+            sessions = list_data.get("output", {}).get("sessions", [])
+
+            if not isinstance(sessions, list):
+                print("❌ Invalid response: 'sessions' is not an array.")
+                print("Full response:", list_data)
+                return
+
+            # Delete sessions
+            for session in sessions:
+                session_id = session.get("id")
+                delete_res = await client.post(vertex_query_url, json={
+                    "class_method": "delete_session",
+                    "input": {
+                        "user_id": user_id,
+                        "session_id": session_id
+                    }
+                }, headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {access_token}"
+                })
+                if delete_res.status_code != 200:
+                    print(f"❌ Failed to delete session {session_id}")
+
+    except Exception as e:
+        print("❌ Error during session handling:", e)
+
     
+@app.get("/health")
+def get_health():
+    return {"message": "Health check successful!"}
+
+@app.get("/api/access-token")
+def get_gcp_token():
+    try:
+        token = fetch_gcp_access_token()
+        return JSONResponse(content={"access_token": token})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
 @app.post("/api/generate-logo",response_model=LogoAgentResponse)
 async def generate_logo(prompt: str = Form(...)):
     """
@@ -119,27 +189,42 @@ async def generate_logo(prompt: str = Form(...)):
     )
 
 
-@app.get("/api/access-token")
-def get_gcp_token():
+
+@app.post("/api/generate-ui")
+async def generate_ui(data: UIContentRequest):
+    access_token = fetch_gcp_access_token()
+    if not access_token:
+        raise HTTPException(status_code=500, detail="Failed to fetch access token")
+
+    vertex_stream_url = os.getenv("VERTEX_STREAM_URL")
+    user_id = os.getenv("USER_ID")
+
+    message_payload = {
+        "class_method": "stream_query",
+        "input": {
+            "user_id": user_id,
+            "message": {
+                "role": "user",
+                "parts": [
+                    { "text": data.content }
+                ]
+            }
+        }
+    }
     try:
-        # Load credentials
-        credentials = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_FILE,
-            scopes=SCOPES
-        )
-        # Refresh and get token
-        auth_req = google.auth.transport.requests.Request()
-        credentials.refresh(auth_req)
-
-        return JSONResponse(content={"access_token": credentials.token})
-
+        async with httpx.AsyncClient(timeout=httpx.Timeout(90.0)) as client:
+            response = await client.post(vertex_stream_url, json=message_payload, headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {access_token}"
+            })
+            response.raise_for_status()
+            print("Response status code:", response)
+            return PlainTextResponse(content=response.text)
     except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
-    
-@app.get("/health")
-def get_health():
-    return {"message": "Health check successful!"}
-
+        print("❌ Error during stream query:", e)
+        raise HTTPException(status_code=500, detail="Failed to fetch UI content")
+    finally:
+        await list_and_delete_sessions(access_token, user_id)
 
 # For running directly
 if __name__ == "__main__":

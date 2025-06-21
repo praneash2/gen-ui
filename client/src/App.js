@@ -15,140 +15,57 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [theme, setTheme] = useState('');
 
-  const fetchAccessToken = async () => {
-    try {
-      const res = await fetch(process.env.REACT_APP_FAST_API_URL);
-      const data = await res.json();
-      return data.access_token;
-    } catch (err) {
-      console.error("❌ Failed to fetch access token:", err);
-      return null;
-    }
+const fetchUIContent = async () => {
+  console.log('✅ Generating New UI Theme...');
+  setLoading(true);
+
+  const requestBody = {
+    code: { ...content },
+    theme: theme,
+    instructions: INSTRUCTIONS,
   };
 
-  const listAndDeleteSessions = async (accessToken, userId) => {
-     const vertexQueryUrl = process.env.REACT_APP_VERTEX_QUERY_URL;
   try {
-    // 1. List sessions
-    const listRes = await fetch(vertexQueryUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        class_method: "list_sessions",
-        input: { user_id: userId },
-      }),
-    });
-
-    const listData = await listRes.json();
-    const sessions = listData.output?.sessions;
-
-    if (!Array.isArray(sessions)) {
-      console.error("❌ Invalid response: 'sessions' is not an array.");
-      console.log("Full response:", listData);
-      return;
-    }
-
-    for (const session of sessions) {
-      const sessionId = session.id;
-      const deleteRes = await fetch(vertexQueryUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          class_method: "delete_session",
-          input: {
-            user_id: userId,
-            session_id: sessionId,
-          },
-        }),
-      });
-
-      if (!deleteRes.ok) {
-       console.error(`❌ Failed to delete session ${sessionId}`);
+    // ✅ Send double-stringified payload to FastAPI
+    const response = await axios.post(
+      `${process.env.REACT_APP_FAST_API_URL}/api/generate-ui`,
+      {
+        content: JSON.stringify(JSON.stringify(requestBody))
       }
+    );
+    
+    console.log("API response:", response.data);
+    // ✅ Split and parse each line from FastAPI NDJSON response
+    const jsonLines = response.data.trim().split('\n');
+    const parsedItems = jsonLines.map(line => JSON.parse(line));
+
+    // ✅ Filter response for combine_results_agent
+    const combinedResult = parsedItems.find(
+      item => item.author === 'combine_results_agent'
+    );
+
+    const code = combinedResult?.content?.parts?.[0]?.text;
+    const parsedContent = responseParserUtil(code);
+
+    // ✅ Logo fix
+    if (parsedContent?.header) {
+      parsedContent.header = parsedContent.header.replace(
+        './logo.png',
+        parsedContent.logo_url || './logo.png'
+      );
     }
-  } catch (err) {
-    console.error("❌ Unexpected error during session listing or deletion:", err);
+
+    setContent(parsedContent);
+    localStorage.setItem('uicontent', JSON.stringify(parsedContent));
+    setOpen(false);
+
+  } catch (error) {
+    console.error('❌ Error fetching UI content:', error.response?.data || error.message);
   }
+
+  setLoading(false);
+  setTheme('');
 };
-
-  // ✅ Made async
-  const fetchUIContent = async () => {
-    console.log('✅ Generating New UI Theme...');
-    setLoading(true);
-
-    const requestBody = {
-      code: { ...content },
-      theme: theme,
-      instructions: INSTRUCTIONS
-    };
-
-
-    const accessToken = await fetchAccessToken();
-    if (!accessToken) {
-      setLoading(false);
-      alert("Failed to fetch access token");
-      return;
-    }
-
-    const vertexStreamUrl = process.env.REACT_APP_VERTEX_STREAM_URL;
-    const userId = process.env.REACT_APP_USER_ID;
-
-    try {
-      const response = await axios.post(
-        vertexStreamUrl,
-        {
-          class_method: 'stream_query',
-          input: {
-            user_id: userId,
-            message: `{ "role": "user", "parts": [{"text": ${JSON.stringify(JSON.stringify(requestBody))}}]}`
-          }
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`
-          }
-        }
-      );
-
-      // ✅ Split and parse each line
-      const jsonLines = response.data.trim().split('\n');
-      const parsedItems = jsonLines.map(line => JSON.parse(line));
-
-      // ✅ Filter for only items authored by 'combine_results_agent'
-      const combinedResult = parsedItems.find(
-        item => item.author === 'combine_results_agent'
-      );
-
-      const code = combinedResult?.content?.parts?.[0]?.text;
-      const parsedContent = responseParserUtil(code);
-
-
-      // Replace logo path
-      if (parsedContent?.header) {
-        parsedContent.header = parsedContent.header.replace('./logo.png', parsedContent.logo_url || './logo.png');
-      }
-
-      setContent(parsedContent);
-      localStorage.setItem('uicontent', JSON.stringify(parsedContent));
-      setOpen(false);
-
-      // Delete previous sessions
-      listAndDeleteSessions(accessToken, userId);
-
-    } catch (error) {
-      console.error('❌ Error fetching UI content:', error.response?.data || error.message);
-    }
-
-    setLoading(false);
-    setTheme('');
-  };
 
   const resetToDefaultUI = () => {
     setContent(BASE_UI_CONTENT_JSON);
