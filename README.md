@@ -1,6 +1,6 @@
-# GENUI – Generative UI POC
+# GENUI-ADK – Generative UI POC
 
-**GENUI** is a proof-of-concept project that delivers **rapid UI personalization** for users visiting any website. It leverages a generative approach to dynamically tailor experiences in real-time.
+**GENUI-ADK** is a proof-of-concept project that delivers **rapid UI personalization** for users visiting any website. It leverages a generative approach to dynamically tailor experiences in real-time.
 
 - **Frontend**: Built with [React](https://reactjs.org/)
 - **Backend**: Powered by [Google's Agent Development Kit (ADK)](https://developers.google.com/agent-development-kit)
@@ -14,6 +14,15 @@
 - Seamless integration of React UI with ADK agents
 
 ---
+
+## Architecture
+
+Below is the architecture diagram for the GENUI-ADK
+
+<p align="center">
+  <img src="assets/architecture.png" alt="architecture" width="400"/>
+</p>
+
 
 ## 🛠️ Installation
 
@@ -82,7 +91,7 @@ GENUI/
 
 ## Api Gateway
 
-#### This is for token access and image generation
+The `ApiGateway` acts as a gateway server for token access, for accessing agent layer endpoints and image generation tool
 
 ```bash
 Create and Activate the Python Environment
@@ -102,7 +111,7 @@ IMG_MODEL = " "
 
 ```
 
-## Deploy to Cloud Run Follow this steps
+## Deploy ApiGateway to Cloud Run Follow this steps
 
 ### STEP 1 : Containerize the Application and push to Gcloud Artifact Registry
 ```
@@ -118,7 +127,32 @@ docker push us-central1-docker.pkg.dev/genuiagent/apigatewaygenui/apigatewaygenu
 
 #### Create a Cloud Run from gcloud console using artifact registry 
 
-or 
+Manually create a cloud run deployment using the above image in GCP portal and deploy it
 
-#### Create a Cloud Run using commands
+## Deploy Vertex AI Agent Engine
 
+Create .env and Set the Required Environment Variables
+
+```
+GOOGLE_CLOUD_PROJECT=""
+GOOGLE_CLOUD_LOCATION=""
+GOOGLE_CLOUD_STAGING_BUCKET=""
+GOOGLE_API_KEY=''
+GOOGLE_GENAI_USE_VERTEXAI=FALSE
+AZURE_API_KEY=""
+AZURE_API_BASE=""
+AZURE_API_VERSION=""
+CLOUDINARY_CLOUD_NAME=''
+CLOUDINARY_API_KEY=''
+CLOUDINARY_API_SECRET=''
+FASTAPI_URL = ""
+GEMINI_MODEL = ""
+MODEL_GPT_41 = ""
+```
+
+Run the below command to deploy the `Agent Layer` in the server to `Vertex AI Agent Engine`
+
+```
+cd server/deployment
+python deploy.py
+```
