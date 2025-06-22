@@ -5,7 +5,9 @@
 - **Frontend**: Built with [React](https://reactjs.org/)
 - **Backend**: Powered by [Google's Agent Development Kit (ADK)](https://developers.google.com/agent-development-kit)
 
-![Looping Demo](assets/demo.gif)
+<p align="center">
+  <img src="assets/demo.gif" alt="Demo" width="1000"/>
+</p>
 
 ---
 
