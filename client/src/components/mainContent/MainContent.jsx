@@ -3,6 +3,7 @@ import withDynamicHandlers from "../../hoc/withDynamicHandlers/withDynamicHandle
 const MainContent = ({content}) => {
     const handleClick = () => {
         console.log("Button clicked in MainContent");
+        alert("Yeah, the functionality retains after personalization! 🤯")
     }
     const DynamicComponent = withDynamicHandlers(content, {
         handleClick

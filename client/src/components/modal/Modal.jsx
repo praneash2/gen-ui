@@ -29,7 +29,7 @@ const Modal = ({ showResetLink, fetchUIContent, setOpen, theme, setTheme, resetT
                         id="theme"
                         value={theme}
                         onChange={(e) => setTheme(e.target.value)}
-                        placeholder="e.g., Dark, Christmas, Ghibli"
+                        placeholder="e.g., Dark, Christmas, Superman"
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
                     />
                 </div>

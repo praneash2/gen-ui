@@ -47,12 +47,17 @@ const fetchUIContent = async () => {
     const code = combinedResult?.content?.parts?.[0]?.text;
     const parsedContent = responseParserUtil(code);
 
-    // ✅ Logo fix
+    // ✅ Logo fix has to be replaced in prompt later
     if (parsedContent?.header) {
       parsedContent.header = parsedContent.header.replace(
         './logo.png',
         parsedContent.logo_url || './logo.png'
       );
+      parsedContent.header = parsedContent.header.replace('{handlePersonalise}', '"handlePersonalise"')
+    }
+
+    if(parsedContent?.main) {
+      parsedContent.main = parsedContent.main.replace('{handleClick}', '"handleClick"')
     }
 
     setContent(parsedContent);
