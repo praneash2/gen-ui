@@ -20,7 +20,7 @@
 Below is the architecture diagram for the GENUI-ADK
 
 <p align="center">
-  <img src="assets/architecture.png" alt="architecture" width="400"/>
+  <img src="assets/architecture.png" alt="architecture" width="1000"/>
 </p>
 
 
